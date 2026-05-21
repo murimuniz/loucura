@@ -2,6 +2,7 @@
 function createNetworkBg(canvasId, options = {}) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
+  canvas.style.pointerEvents = 'none';
   const ctx = canvas.getContext('2d');
   const color = options.color || '59,111,224';
   const dotCount = options.dots || 60;
@@ -80,6 +81,7 @@ function createNetworkBg(canvasId, options = {}) {
 function createGeometricBg(canvasId, options = {}) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
+  canvas.style.pointerEvents = 'none';
   const ctx = canvas.getContext('2d');
 
   function resize() { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; }

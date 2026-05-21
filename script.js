@@ -2,8 +2,26 @@
 const cursor = document.getElementById('cursor');
 const ring = document.getElementById('cursor-ring');
 let mx=0,my=0,rx=0,ry=0;
-document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cursor.style.left=mx+'px';cursor.style.top=my+'px'});
-function animRing(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(animRing)}
+
+// Usar clientX/clientY para seguir a viewport inteira
+window.addEventListener('mousemove',e=>{
+  mx=e.clientX; my=e.clientY;
+  cursor.style.left=mx+'px';
+  cursor.style.top=my+'px';
+},{passive:true});
+
+// Garantir que o cursor apareça mesmo no scroll
+window.addEventListener('scroll',()=>{
+  cursor.style.left=mx+'px';
+  cursor.style.top=my+'px';
+},{passive:true});
+
+function animRing(){
+  rx+=(mx-rx)*.12; ry+=(my-ry)*.12;
+  ring.style.left=rx+'px';
+  ring.style.top=ry+'px';
+  requestAnimationFrame(animRing);
+}
 animRing();
 document.querySelectorAll('a,button,.pillar,.thinker,.debate-card,.video-card,.card,.stat-box').forEach(el=>{
   el.addEventListener('mouseenter',()=>{cursor.style.transform='translate(-50%,-50%) scale(2)';ring.style.opacity='0.3'});
@@ -56,47 +74,59 @@ const cObs=new IntersectionObserver(entries=>{
 },{threshold:0.5});
 document.querySelectorAll('.stat-val[data-target]').forEach(el=>cObs.observe(el));
 
-// ── Page Transition ──
-(function(){
-  // Criar overlay
-  const overlay = document.createElement('div');
-  overlay.className = 'page-transition';
-  for(let i=0;i<5;i++) overlay.appendChild(document.createElement('div')).className='pt-bar';
-  const scanline = document.createElement('div');
-  scanline.className = 'pt-scanline';
-  document.body.appendChild(overlay);
-  document.body.appendChild(scanline);
 
-  // Entrada: animar saída das barras ao carregar
-  window.addEventListener('load', () => {
-    overlay.classList.add('enter');
-    scanline.style.opacity='1';
-    // pequeno delay para as barras aparecerem, depois saem
-    requestAnimationFrame(()=>{
-      setTimeout(()=>{
-        overlay.classList.remove('enter');
-        overlay.classList.add('leave');
-        setTimeout(()=>{
-          overlay.classList.remove('leave');
-          scanline.style.opacity='0';
-        }, 600);
-      }, 80);
+
+
+
+// ── Page Transitions ──
+(function(){
+  // Páginas escuras usam scan ciano, claras usam scan azul suave
+  const darkPages = ['debate.html','videos.html'];
+
+  const overlay   = document.createElement('div'); overlay.id='pt-overlay';
+  const scan      = document.createElement('div'); scan.id='pt-scan';
+  const scanLight = document.createElement('div'); scanLight.id='pt-scan-light';
+
+  [overlay, scan, scanLight].forEach(el=>document.body.appendChild(el));
+
+  function isDark(href){
+    return darkPages.includes(href || (location.pathname.split('/').pop()||'index.html'));
+  }
+
+  function clearAll(){
+    [overlay, scan, scanLight].forEach(el=>el.classList.remove('active'));
+    [scan, scanLight].forEach(el=>{
+      el.style.animation='none'; el.style.top='-4px';
+      el.offsetHeight;
+      el.style.animation='';
     });
+  }
+
+  function runTransition(toHref, cb){
+    clearAll();
+    const dark = isDark(toHref);
+    overlay.style.background = dark ? 'rgba(10,14,26,0.7)' : 'rgba(250,250,250,0.7)';
+    overlay.classList.add('active');
+    setTimeout(()=>{
+      (dark ? scan : scanLight).classList.add('active');
+    }, 30);
+    setTimeout(cb, 520);
+  }
+
+  // Entrada suave
+  window.addEventListener('load', ()=>{
+    overlay.style.background = isDark() ? 'rgba(10,14,26,0.5)' : 'rgba(250,250,250,0.5)';
+    overlay.classList.add('active');
+    setTimeout(()=>overlay.classList.remove('active'), 80);
   });
 
-  // Saída: ao clicar em link interno
-  document.addEventListener('click', e => {
+  // Saída ao clicar
+  document.addEventListener('click', e=>{
     const link = e.target.closest('a');
     if(!link) return;
     const href = link.getAttribute('href');
-    if(!href || href.startsWith('#') || href.startsWith('http') || href.startsWith('mailto')) return;
+    if(!href||href.startsWith('#')||href.startsWith('http')||href.startsWith('mailto')) return;
     e.preventDefault();
-    overlay.classList.remove('leave');
-    overlay.classList.add('enter');
-    scanline.style.opacity='1';
-    scanline.style.animation='none';
-    scanline.offsetHeight; // reflow
-    scanline.style.animation='';
-    setTimeout(()=>{ window.location.href = href; }, 600);
+    runTransition(href, ()=>{ window.location.href = href; });
   });
 })();
