@@ -18,13 +18,21 @@ if(bar) window.addEventListener('scroll',()=>{bar.style.width=(window.scrollY/(d
 const nav=document.getElementById('navbar');
 if(nav) window.addEventListener('scroll',()=>nav.classList.toggle('scrolled',window.scrollY>40));
 
-// Active nav link
-const page = location.pathname.split('/').pop()||'index.html';
+// Active nav link — detecta automaticamente a página atual
+const page = location.pathname.split('/').pop() || 'index.html';
 document.querySelectorAll('.nav-links a').forEach(a=>{
-  if(a.getAttribute('href')===page) a.classList.add('active');
+  a.classList.remove('active');
+  const href = a.getAttribute('href');
+  if(href === page || (page === '' && href === 'index.html')) {
+    a.classList.add('active');
+  }
 });
-const vbtn=document.querySelector('.nav-video-btn');
-if(vbtn && page==='videos.html') vbtn.classList.add('active');
+// botão vídeo
+const vbtn = document.querySelector('.nav-video-btn');
+if(vbtn) {
+  vbtn.classList.remove('active');
+  if(page === 'videos.html') vbtn.classList.add('active');
+}
 
 // Scroll reveals
 const obs=new IntersectionObserver(entries=>{
@@ -47,3 +55,48 @@ const cObs=new IntersectionObserver(entries=>{
   });
 },{threshold:0.5});
 document.querySelectorAll('.stat-val[data-target]').forEach(el=>cObs.observe(el));
+
+// ── Page Transition ──
+(function(){
+  // Criar overlay
+  const overlay = document.createElement('div');
+  overlay.className = 'page-transition';
+  for(let i=0;i<5;i++) overlay.appendChild(document.createElement('div')).className='pt-bar';
+  const scanline = document.createElement('div');
+  scanline.className = 'pt-scanline';
+  document.body.appendChild(overlay);
+  document.body.appendChild(scanline);
+
+  // Entrada: animar saída das barras ao carregar
+  window.addEventListener('load', () => {
+    overlay.classList.add('enter');
+    scanline.style.opacity='1';
+    // pequeno delay para as barras aparecerem, depois saem
+    requestAnimationFrame(()=>{
+      setTimeout(()=>{
+        overlay.classList.remove('enter');
+        overlay.classList.add('leave');
+        setTimeout(()=>{
+          overlay.classList.remove('leave');
+          scanline.style.opacity='0';
+        }, 600);
+      }, 80);
+    });
+  });
+
+  // Saída: ao clicar em link interno
+  document.addEventListener('click', e => {
+    const link = e.target.closest('a');
+    if(!link) return;
+    const href = link.getAttribute('href');
+    if(!href || href.startsWith('#') || href.startsWith('http') || href.startsWith('mailto')) return;
+    e.preventDefault();
+    overlay.classList.remove('leave');
+    overlay.classList.add('enter');
+    scanline.style.opacity='1';
+    scanline.style.animation='none';
+    scanline.offsetHeight; // reflow
+    scanline.style.animation='';
+    setTimeout(()=>{ window.location.href = href; }, 600);
+  });
+})();

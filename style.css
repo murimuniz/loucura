@@ -80,3 +80,57 @@ footer h4{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing
 footer a{display:inline-block;font-size:14px;color:rgba(255,255,255,0.35);margin-bottom:8px;transition:color .2s,transform .2s}
 footer a:hover{color:#fff;transform:translateX(4px)}
 .footer-bottom{border-top:1px solid rgba(255,255,255,0.08);margin-top:48px;padding-top:24px;text-align:center;font-size:12px;color:rgba(255,255,255,0.3)}
+
+/* ── Page Transitions ── */
+.page-transition{
+  position:fixed;inset:0;z-index:9000;pointer-events:none;
+  display:flex;flex-direction:column;
+}
+.pt-bar{
+  flex:1;background:var(--cobalt);
+  transform:scaleY(0);transform-origin:bottom;
+  transition:transform .35s cubic-bezier(.7,0,.3,1);
+}
+.pt-bar:nth-child(1){transition-delay:.00s;background:#0033A0}
+.pt-bar:nth-child(2){transition-delay:.04s;background:#0a3db5}
+.pt-bar:nth-child(3){transition-delay:.08s;background:#1248c8}
+.pt-bar:nth-child(4){transition-delay:.12s;background:#1a52da}
+.pt-bar:nth-child(5){transition-delay:.16s;background:#3B6FE0}
+
+.page-transition.enter .pt-bar{
+  transform:scaleY(1);transform-origin:bottom;
+}
+.page-transition.leave .pt-bar{
+  transform:scaleY(0);transform-origin:top;
+  transition:transform .35s cubic-bezier(.7,0,.3,1);
+}
+.page-transition.leave .pt-bar:nth-child(1){transition-delay:.00s}
+.page-transition.leave .pt-bar:nth-child(2){transition-delay:.04s}
+.page-transition.leave .pt-bar:nth-child(3){transition-delay:.08s}
+.page-transition.leave .pt-bar:nth-child(4){transition-delay:.12s}
+.page-transition.leave .pt-bar:nth-child(5){transition-delay:.16s}
+
+/* scan line over the bars */
+.pt-scanline{
+  position:fixed;left:0;right:0;height:2px;
+  background:rgba(255,255,255,0.6);
+  box-shadow:0 0 12px 4px rgba(59,111,224,0.8);
+  z-index:9001;pointer-events:none;
+  opacity:0;top:50%;
+  transition:opacity .1s;
+}
+.page-transition.enter .pt-scanline{
+  opacity:1;
+  animation:scanMove .5s ease-in-out forwards;
+}
+@keyframes scanMove{
+  0%{top:100%}
+  100%{top:0%}
+}
+
+/* page content fade */
+body{animation:pageIn .4s .5s both}
+@keyframes pageIn{
+  from{opacity:0;transform:translateY(12px)}
+  to{opacity:1;transform:translateY(0)}
+}
